@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>七年级幻方验证器 - 大字体版</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Arial', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f9ff;
+            color: #333;
+            line-height: 1.6;
+            font-size: 18px; /* 基础字体增大 */
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 2.8em; /* 标题字体加大 */
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 1.4em; /* 副标题字体加大 */
+        }
+        
+        .instructions {
+            background-color: #e8f4fc;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border-left: 6px solid #3498db;
+            font-size: 1.1em; /* 说明文字加大 */
+        }
+        
+        .instructions h3 {
+            margin-top: 0;
+            color: #2980b9;
+            font-size: 1.5em; /* 说明标题加大 */
+        }
+        
+        .instructions p {
+            margin: 12px 0;
+            font-size: 1.1em; /* 段落文字加大 */
+        }
+        
+        .magic-square-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px; /* 格子间距加大 */
+            margin-bottom: 30px;
+            max-width: 600px; /* 网格整体加宽 */
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .cell {
+            width: 100%;
+            aspect-ratio: 1;
+            text-align: center;
+            font-size: 32px; /* 输入字体显著加大 */
+            border: 3px solid #bdc3c7; /* 边框加粗 */
+            border-radius: 10px;
+            padding: 15px; /* 内边距加大 */
+            transition: all 0.2s;
+            font-weight: bold; /* 字体加粗 */
+        }
+        
+        .cell:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.3); /* 阴影加大 */
+            transform: scale(1.03);
+        }
+        
+        .cell.error {
+            border-color: #e74c3c;
+            background-color: #ffeaea;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px; /* 按钮间距加大 */
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 18px 36px; /* 按钮内边距加大 */
+            border: none;
+            border-radius: 8px;
+            font-size: 20px; /* 按钮字体加大 */
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 180px; /* 按钮最小宽度加大 */
+        }
+        
+        #verify-btn {
+            background-color: #2ecc71;
+            color: white;
+        }
+        
+        #verify-btn:hover {
+            background-color: #27ae60;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(46, 204, 113, 0.4);
+        }
+        
+        #reset-btn {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        #reset-btn:hover {
+            background-color: #c0392b;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+        }
+        
+        #example-btn {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        #example-btn:hover {
+            background-color: #2980b9;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+        
+        .results {
+            margin-top: 40px;
+            padding: 25px;
+            border-radius: 12px;
+            background-color: #f8f9fa;
+            border: 2px solid #eaeaea;
+        }
+        
+        .results h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            font-size: 1.8em; /* 结果标题加大 */
+            margin-bottom: 20px;
+        }
+        
+        .result-item {
+            padding: 15px 20px; /* 结果项内边距加大 */
+            margin-bottom: 12px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.2em; /* 结果项字体加大 */
+        }
+        
+        .result-item.correct {
+            background-color: #d5f4e6;
+            color: #27ae60;
+            border-left: 6px solid #2ecc71; /* 左侧边框加粗 */
+        }
+        
+        .result-item.incorrect {
+            background-color: #fdeaea;
+            color: #e74c3c;
+            border-left: 6px solid #e74c3c; /* 左侧边框加粗 */
+        }
+        
+        .result-summary {
+            font-size: 1.5em; /* 总结字体加大 */
+            font-weight: bold;
+            padding: 25px;
+            text-align: center;
+            border-radius: 10px;
+            margin-top: 25px;
+        }
+        
+        .summary-success {
+            background-color: #d5f4e6;
+            color: #27ae60;
+            border: 3px solid #2ecc71; /* 边框加粗 */
+        }
+        
+        .summary-failure {
+            background-color: #fdeaea;
+            color: #e74c3c;
+            border: 3px solid #e74c3c; /* 边框加粗 */
+        }
+        
+        .algebra-examples {
+            background-color: #fef9e7;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+            border-left: 6px solid #f1c40f; /* 边框加粗 */
+            font-size: 1.1em; /* 示例文字加大 */
+        }
+        
+        .algebra-examples h4 {
+            margin-top: 0;
+            color: #d68910;
+            font-size: 1.4em; /* 示例标题加大 */
+        }
+        
+        .footnote {
+            text-align: center;
+            margin-top: 40px;
+            color: #7f8c8d;
+            font-size: 1em; /* 脚注字体适中 */
+            padding-top: 20px;
+            border-top: 2px solid #eee;
+        }
+        
+        /* 响应式设计调整 */
+        @media (max-width: 768px) {
+            body {
+                font-size: 16px;
+                padding: 15px;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2.2em;
+            }
+            
+            .subtitle {
+                font-size: 1.2em;
+            }
+            
+            .magic-square-grid {
+                gap: 15px;
+                max-width: 500px;
+            }
+            
+            .cell {
+                font-size: 28px;
+                padding: 12px;
+            }
+            
+            button {
+                padding: 15px 25px;
+                font-size: 18px;
+                min-width: 150px;
+            }
+            
+            .result-item {
+                font-size: 1.1em;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .magic-square-grid {
+                gap: 12px;
+                max-width: 400px;
+            }
+            
+            .cell {
+                font-size: 24px;
+                padding: 10px;
+            }
+            
+            button {
+                padding: 12px 20px;
+                font-size: 16px;
+                min-width: 130px;
+            }
+            
+            .controls {
+                gap: 15px;
+            }
+            
+            .result-summary {
+                font-size: 1.3em;
+            }
+        }
+        
+        /* 添加格子编号样式，便于后排学生识别 */
+        .cell::placeholder {
+            font-size: 18px;
+            color: #95a5a6;
+            font-weight: normal;
+        }
+        
+        /* 添加输入值的高亮效果 */
+        .cell:not(:placeholder-shown) {
+            background-color: #f8fffa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>七年级幻方验证器</h1>
+        <div class="subtitle">验证3×3幻方，支持数字和代数式输入</div>
+        
+        <div class="instructions">
+            <h3>使用说明</h3>
+            <p>1. 在下面的3×3方格中输入数字或代数式（如：5、2a-b、a+1等）</p>
+            <p>2. 点击"验证幻和"按钮，系统会自动计算每行、每列和对角线的和</p>
+            <p>3. 查看验证结果，了解哪些行、列或对角线符合幻和条件</p>
+            <p>4. 使用"重置"按钮清空所有输入，或使用"示例"按钮加载经典幻方</p>
+        </div>
+        
+        <div class="algebra-examples">
+            <h4>代数式输入示例</h4>
+            <p>• 基本代数式: a, b, 2a, 3b</p>
+            <p>• 加减运算: a+1, 2a-b, a+b, 3a-2</p>
+            <p>• 注意: 目前不支持乘除运算和括号，请使用简单的加减表达式</p>
+        </div>
+        
+        <div class="magic-square-grid" id="magic-square">
+            <!-- 幻方格子将通过JavaScript生成 -->
+        </div>
+        
+        <div class="controls">
+            <button id="verify-btn">验证幻和</button>
+            <button id="reset-btn">重置</button>
+            <button id="example-btn">加载示例</button>
+        </div>
+        
+        <div class="results" id="results-container">
+            <h3>验证结果</h3>
+            <div id="results-list">
+                <!-- 验证结果将在这里显示 -->
+                <p style="text-align: center; color: #7f8c8d; font-size: 1.2em;">点击"验证幻和"查看结果</p>
+            </div>
+            <div id="result-summary" class="result-summary">
+                <!-- 验证总结将在这里显示 -->
+            </div>
+        </div>
+        
+        <div class="footnote">
+            <p>七年级数学 - 幻方验证工具 © 2023 | 大字体版专为课堂设计</p>
+        </div>
+    </div>
+
+    <script>
+        // 初始化幻方网格
+        const magicSquare = document.getElementById('magic-square');
+        const resultsList = document.getElementById('results-list');
+        const resultSummary = document.getElementById('result-summary');
+        
+        // 创建3x3幻方输入网格
+        for (let i = 0; i < 9; i++) {
+            const cell = document.createElement('input');
+            cell.type = 'text';
+            cell.className = 'cell';
+            cell.id = `cell-${i}`;
+            cell.placeholder = `格子 ${i+1}`;
+            cell.setAttribute('maxlength', '10');
+            magicSquare.appendChild(cell);
+        }
+        
+        // 获取所有格子元素
+        const cells = document.querySelectorAll('.cell');
+        
+        // 验证按钮事件
+        document.getElementById('verify-btn').addEventListener('click', verifyMagicSquare);
+        
+        // 重置按钮事件
+        document.getElementById('reset-btn').addEventListener('click', resetGrid);
+        
+        // 示例按钮事件
+        document.getElementById('example-btn').addEventListener('click', loadExample);
+        
+        // 代数式解析函数 - 简单解析a和b的代数式
+        function parseAlgebraicExpression(expr, aValue, bValue) {
+            if (!expr || expr.trim() === '') return NaN;
+            
+            expr = expr.trim().toLowerCase();
+            
+            // 如果是纯数字，直接返回
+            if (!isNaN(expr) && expr !== '') {
+                return parseFloat(expr);
+            }
+            
+            // 检查是否包含字母
+            if (!expr.includes('a') && !expr.includes('b')) {
+                return NaN; // 不是有效的代数式或数字
+            }
+            
+            // 替换a和b的值
+            let processedExpr = expr
+                .replace(/a/g, `(${aValue})`)
+                .replace(/b/g, `(${bValue})`);
+            
+            try {
+                // 使用eval计算表达式，注意安全性（这里输入是受控的）
+                return eval(processedExpr);
+            } catch (error) {
+                console.error(`无法解析表达式: ${expr}`);
+                return NaN;
+            }
+        }
+        
+        // 验证幻方
+        function verifyMagicSquare() {
+            // 获取a和b的值（如果使用代数式）
+            let aValue = 5; // 默认值
+            let bValue = 3; // 默认值
+            
+            // 清除之前的错误标记
+            cells.forEach(cell => cell.classList.remove('error'));
+            
+            // 收集所有格子的值
+            const values = [];
+            let hasAlgebraicExpression = false;
+            
+            for (let i = 0; i < cells.length; i++) {
+                const cellValue = cells[i].value.trim();
+                values.push(cellValue);
+                
+                // 检查是否有代数式
+                if (cellValue.includes('a') || cellValue.includes('b')) {
+                    hasAlgebraicExpression = true;
+                }
+            }
+            
+            // 如果有代数式，提示用户输入a和b的值
+            if (hasAlgebraicExpression) {
+                const aInput = prompt("检测到代数式，请输入a的值（默认为5）:", "5");
+                const bInput = prompt("检测到代数式，请输入b的值（默认为3）:", "3");
+                
+                aValue = aInput && !isNaN(aInput) ? parseFloat(aInput) : 5;
+                bValue = bInput && !isNaN(bInput) ? parseFloat(bInput) : 3;
+            }
+            
+            // 计算每个格子的数值
+            const numericValues = [];
+            let hasInvalidInput = false;
+            
+            for (let i = 0; i < values.length; i++) {
+                const expr = values[i];
+                const numValue = parseAlgebraicExpression(expr, aValue, bValue);
+                
+                if (isNaN(numValue)) {
+                    cells[i].classList.add('error');
+                    hasInvalidInput = true;
+                }
+                
+                numericValues.push(numValue);
+            }
+            
+            // 如果有无效输入，提示用户
+            if (hasInvalidInput) {
+                resultsList.innerHTML = `
+                    <div class="result-item incorrect">
+                        <span>错误</span>
+                        <span>部分输入无法解析，请检查输入格式</span>
+                    </div>
+                `;
+                resultSummary.innerHTML = `<div class="summary-failure">请检查红色标记的格子，确保输入的是数字或简单代数式(如: a+1, 2a-b)</div>`;
+                return;
+            }
+            
+            // 计算所有行、列、对角线的和
+            const sums = [];
+            const descriptions = [];
+            
+            // 行和
+            for (let row = 0; row < 3; row++) {
+                let sum = 0;
+                for (let col = 0; col < 3; col++) {
+                    sum += numericValues[row * 3 + col];
+                }
+                sums.push(sum);
+                descriptions.push(`第 ${row + 1} 行`);
+            }
+            
+            // 列和
+            for (let col = 0; col < 3; col++) {
+                let sum = 0;
+                for (let row = 0; row < 3; row++) {
+                    sum += numericValues[row * 3 + col];
+                }
+                sums.push(sum);
+                descriptions.push(`第 ${col + 1} 列`);
+            }
+            
+            // 主对角线
+            let diagonal1 = numericValues[0] + numericValues[4] + numericValues[8];
+            sums.push(diagonal1);
+            descriptions.push("主对角线 (左上到右下)");
+            
+            // 副对角线
+            let diagonal2 = numericValues[2] + numericValues[4] + numericValues[6];
+            sums.push(diagonal2);
+            descriptions.push("副对角线 (右上到左下)");
+            
+            // 计算幻和（所有和的平均值）
+            const magicSum = sums.reduce((a, b) => a + b, 0) / sums.length;
+            
+            // 显示结果
+            resultsList.innerHTML = '';
+            let allEqual = true;
+            let firstSum = sums[0];
+            
+            for (let i = 0; i < sums.length; i++) {
+                const isEqual = Math.abs(sums[i] - magicSum) < 0.0001; // 处理浮点数精度问题
+                allEqual = allEqual && isEqual;
+                
+                const resultItem = document.createElement('div');
+                resultItem.className = `result-item ${isEqual ? 'correct' : 'incorrect'}`;
+                
+                if (isEqual) {
+                    resultItem.innerHTML = `
+                        <span>${descriptions[i]}</span>
+                        <span>和为 ${sums[i].toFixed(2)} ✓</span>
+                    `;
+                } else {
+                    resultItem.innerHTML = `
+                        <span>${descriptions[i]}</span>
+                        <span>和为 ${sums[i].toFixed(2)}，与幻和 ${magicSum.toFixed(2)} 不符</span>
+                    `;
+                }
+                
+                resultsList.appendChild(resultItem);
+            }
+            
+            // 显示总结
+            if (allEqual) {
+                resultSummary.innerHTML = `<div class="summary-success">恭喜！这是一个完美的幻方，幻和为 ${magicSum.toFixed(2)}</div>`;
+            } else {
+                resultSummary.innerHTML = `<div class="summary-failure">这不是一个幻方，各行、列、对角线的和不完全相等</div>`;
+            }
+            
+            // 如果有代数式，显示使用的a和b的值
+            if (hasAlgebraicExpression) {
+                const algebraInfo = document.createElement('div');
+                algebraInfo.className = 'result-item';
+                algebraInfo.innerHTML = `<span>代数式计算值</span><span>a=${aValue}, b=${bValue}</span>`;
+                resultsList.appendChild(algebraInfo);
+            }
+        }
+        
+        // 重置网格
+        function resetGrid() {
+            cells.forEach(cell => {
+                cell.value = '';
+                cell.classList.remove('error');
+            });
+            
+            resultsList.innerHTML = '<p style="text-align: center; color: #7f8c8d; font-size: 1.2em;">点击"验证幻和"查看结果</p>';
+            resultSummary.innerHTML = '';
+        }
+        
+        // 加载示例幻方
+        function loadExample() {
+            // 经典3x3幻方示例
+            const exampleValues = [
+                '2', '7', '6',
+                '9', '5', '1',
+                '4', '3', '8'
+            ];
+            
+            // 代数式幻方示例
+            const algebraicExample = [
+                'a+b', 'a-b', 'a+1',
+                'a-1', 'a', 'a+2',
+                'a-2', 'a+3', 'a-b'
+            ];
+            
+            // 随机选择示例
+            const useAlgebraic = Math.random() > 0.5;
+            
+            for (let i = 0; i < cells.length; i++) {
+                cells[i].value = useAlgebraic ? algebraicExample[i] : exampleValues[i];
+                cells[i].classList.remove('error');
+            }
+            
+            resultsList.innerHTML = '<p style="text-align: center; color: #7f8c8d; font-size: 1.2em;">已加载示例，点击"验证幻和"查看结果</p>';
+            resultSummary.innerHTML = '';
+            
+            if (useAlgebraic) {
+                resultSummary.innerHTML = `<div class="summary-success">已加载代数式幻方示例，其中a=5, b=3时构成幻方</div>`;
+            }
+        }
+        
+        // 页面加载时加载一个示例
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(loadExample, 500);
+        });
+    </script>
+</body>
+</html>

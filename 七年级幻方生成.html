@@ -1,0 +1,1463 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>七年级幻方验证器 - 优化版</title>
+    <style>
+        /* 优化字体大小样式 */
+        * {
+            box-sizing: border-box;
+            font-family: 'Arial', 'Microsoft YaHei', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            padding: 20px;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            color: #2d3748;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            position: relative;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #4a5568;
+            margin-bottom: 30px;
+            font-size: 1.3em;
+            font-weight: 500;
+        }
+        
+        /* 标签页样式 */
+        .tab-container {
+            display: flex;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #e2e8f0;
+            background: #f7fafc;
+            border-radius: 12px 12px 0 0;
+            overflow: hidden;
+        }
+        
+        .tab {
+            padding: 15px 30px;
+            background-color: transparent;
+            border: none;
+            font-size: 1.2em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex: 1;
+            text-align: center;
+            color: #718096;
+        }
+        
+        .tab.active {
+            background-color: #4299e1;
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* 幻方网格 - 适中字体 */
+        .magic-square-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin: 35px auto;
+            max-width: 600px;
+        }
+        
+        .cell {
+            width: 100%;
+            aspect-ratio: 1;
+            text-align: center;
+            font-size: 2em; /* 调整为适中字体 */
+            font-weight: 700;
+            border: 3px solid #cbd5e0;
+            border-radius: 12px;
+            padding: 18px;
+            transition: all 0.2s;
+            background-color: white;
+        }
+        
+        .cell:focus {
+            border-color: #4299e1;
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(66, 153, 225, 0.3);
+            transform: scale(1.03);
+        }
+        
+        .cell.error {
+            border-color: #f56565;
+            background-color: #fed7d7;
+        }
+        
+        .cell.correct {
+            border-color: #48bb78;
+            background-color: #c6f6d5;
+        }
+        
+        /* 控制按钮 - 适中字体 */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 18px;
+            margin: 35px 0;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 16px 32px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 170px;
+        }
+        
+        .primary-btn {
+            background-color: #48bb78;
+            color: white;
+        }
+        
+        .primary-btn:hover {
+            background-color: #38a169;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(72, 187, 120, 0.3);
+        }
+        
+        .secondary-btn {
+            background-color: #f56565;
+            color: white;
+        }
+        
+        .secondary-btn:hover {
+            background-color: #e53e3e;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(245, 101, 101, 0.3);
+        }
+        
+        .info-btn {
+            background-color: #4299e1;
+            color: white;
+        }
+        
+        .info-btn:hover {
+            background-color: #3182ce;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(66, 153, 225, 0.3);
+        }
+        
+        .exercise-btn {
+            background-color: #9f7aea;
+            color: white;
+        }
+        
+        .exercise-btn:hover {
+            background-color: #805ad5;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(159, 122, 234, 0.3);
+        }
+        
+        /* 练习区样式 */
+        .exercise-section {
+            background-color: #f7fafc;
+            padding: 25px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .stats-box {
+            display: flex;
+            justify-content: space-around;
+            margin: 25px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2em; /* 调整为适中字体 */
+            font-weight: 700;
+            color: #4299e1;
+        }
+        
+        .stat-label {
+            font-size: 1.1em;
+            color: #718096;
+            margin-top: 8px;
+        }
+        
+        /* 数字池 - 适中字体 */
+        .number-pool {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 25px 0;
+            justify-content: center;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            border: 3px dashed #cbd5e0;
+        }
+        
+        .number-item {
+            width: 65px;
+            height: 65px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #4299e1, #3182ce);
+            color: white;
+            border-radius: 12px;
+            font-size: 1.6em; /* 调整为适中字体 */
+            font-weight: 700;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+            user-select: none;
+        }
+        
+        .number-item:hover {
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        
+        .number-item.used {
+            background: linear-gradient(135deg, #a0aec0, #718096);
+            transform: scale(0.9);
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        /* 排序数字序列 - 适中字体 */
+        .sorted-numbers {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+        
+        .sorted-numbers h4 {
+            margin-bottom: 15px;
+            color: #2d3748;
+            font-size: 1.4em;
+            font-weight: 600;
+        }
+        
+        .number-sequence {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        
+        .seq-number {
+            width: 65px;
+            height: 65px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #4299e1;
+            color: white;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 1.6em; /* 调整为适中字体 */
+        }
+        
+        .seq-number.center {
+            background: linear-gradient(135deg, #ed8936, #dd6b20);
+            box-shadow: 0 0 12px rgba(237, 137, 54, 0.4);
+        }
+        
+        /* 结果区域 */
+        .results {
+            margin-top: 30px;
+            padding: 25px;
+            border-radius: 12px;
+            background-color: #f7fafc;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .results h3 {
+            margin-bottom: 20px;
+            color: #2d3748;
+            font-size: 1.5em;
+            font-weight: 600;
+        }
+        
+        .result-item {
+            padding: 18px;
+            margin-bottom: 12px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.1em;
+            font-weight: 500;
+        }
+        
+        .result-item.correct {
+            background-color: #c6f6d5;
+            color: #22543d;
+            border-left: 5px solid #48bb78;
+        }
+        
+        .result-item.incorrect {
+            background-color: #fed7d7;
+            color: #742a2a;
+            border-left: 5px solid #f56565;
+        }
+        
+        .result-summary {
+            font-size: 1.3em;
+            font-weight: 600;
+            padding: 20px;
+            text-align: center;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .summary-success {
+            background-color: #c6f6d5;
+            color: #22543d;
+            border: 2px solid #48bb78;
+        }
+        
+        .summary-failure {
+            background-color: #fed7d7;
+            color: #742a2a;
+            border: 2px solid #f56565;
+        }
+        
+        /* 简洁提示框 */
+        .hint {
+            background: #fffaf0;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 25px;
+            border-left: 5px solid #ed8936;
+        }
+        
+        .hint h4 {
+            margin-bottom: 12px;
+            color: #dd6b20;
+            font-size: 1.3em;
+            font-weight: 600;
+        }
+        
+        .step {
+            margin-bottom: 8px;
+            padding-left: 12px;
+            font-size: 1em;
+            color: #744210;
+        }
+        
+        /* 简洁脚注 */
+        .footnote {
+            text-align: center;
+            margin-top: 35px;
+            color: #718096;
+            font-size: 0.95em;
+            padding-top: 20px;
+            border-top: 2px solid #e2e8f0;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 992px) {
+            .container {
+                padding: 25px;
+            }
+            
+            .magic-square-grid {
+                max-width: 550px;
+                gap: 15px;
+            }
+            
+            .cell {
+                font-size: 1.8em;
+                padding: 15px;
+            }
+            
+            .number-item, .seq-number {
+                width: 60px;
+                height: 60px;
+                font-size: 1.5em;
+            }
+            
+            .stat-value {
+                font-size: 1.8em;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2.2em;
+            }
+            
+            .magic-square-grid {
+                max-width: 450px;
+                gap: 12px;
+            }
+            
+            .cell {
+                font-size: 1.6em;
+                padding: 12px;
+            }
+            
+            button {
+                padding: 14px 25px;
+                font-size: 1.1em;
+                min-width: 150px;
+            }
+            
+            .number-item, .seq-number {
+                width: 55px;
+                height: 55px;
+                font-size: 1.4em;
+            }
+            
+            .stats-box {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .tab {
+                padding: 12px 20px;
+                font-size: 1.1em;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 15px;
+            }
+            
+            .magic-square-grid {
+                max-width: 350px;
+                gap: 10px;
+            }
+            
+            .cell {
+                font-size: 1.4em;
+                padding: 10px;
+            }
+            
+            button {
+                padding: 12px 20px;
+                font-size: 1em;
+                min-width: 130px;
+            }
+            
+            .number-item, .seq-number {
+                width: 50px;
+                height: 50px;
+                font-size: 1.3em;
+            }
+            
+            .controls {
+                gap: 15px;
+            }
+        }
+        
+        /* 简洁动画效果 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .tab-content {
+            animation: fadeIn 0.4s ease;
+        }
+        
+        /* 简洁的验证页样式 */
+        .instructions {
+            background-color: #ebf8ff;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border-left: 5px solid #4299e1;
+        }
+        
+        .instructions h3 {
+            margin-bottom: 12px;
+            color: #2c5282;
+            font-size: 1.4em;
+            font-weight: 600;
+        }
+        
+        .instructions p {
+            margin: 10px 0;
+            font-size: 1.1em;
+            color: #4a5568;
+        }
+        
+        /* 顶部控制按钮样式 */
+        .top-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        
+        .top-controls button {
+            padding: 14px 28px;
+            font-size: 1.1em;
+            min-width: 160px;
+        }
+        
+        /* 底部控制按钮样式 */
+        .bottom-controls {
+            display: flex;
+            justify-content: center;
+            gap: 18px;
+            margin: 35px 0 15px 0;
+            flex-wrap: wrap;
+        }
+        
+        /* 标题样式 */
+        .section-title {
+            text-align: center;
+            margin: 20px 0 12px 0;
+            color: #2d3748;
+            font-size: 1.4em;
+            font-weight: 600;
+        }
+        
+        /* 修复拖拽区域样式 */
+        .drag-area {
+            min-height: 80px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>七年级幻方验证器</h1>
+        <div class="subtitle">验证3×3幻方 + 互动练习：将随机数字填入幻方中</div>
+        
+        <div class="tab-container">
+            <button class="tab active" id="tab-verify">幻方验证</button>
+            <button class="tab" id="tab-exercise">幻方练习</button>
+        </div>
+        
+        <!-- 验证幻方标签页 -->
+        <div class="tab-content active" id="content-verify">
+            <div class="instructions">
+                <h3>幻方验证说明</h3>
+                <p>1. 在下面的3×3方格中输入数字或代数式（如：5、2a-b、a+1等）</p>
+                <p>2. 点击"验证幻和"按钮，系统会自动计算每行、每列和对角线的和</p>
+                <p>3. 查看验证结果，了解哪些行、列或对角线符合幻和条件</p>
+                <p>4. 使用"重置"按钮清空所有输入，或使用"示例"按钮加载经典幻方</p>
+            </div>
+            
+            <div class="magic-square-grid" id="magic-square">
+                <!-- 幻方格子将通过JavaScript生成 -->
+            </div>
+            
+            <div class="controls">
+                <button class="primary-btn" id="verify-btn">验证幻和</button>
+                <button class="secondary-btn" id="reset-btn">重置</button>
+                <button class="info-btn" id="example-btn">加载示例</button>
+            </div>
+            
+            <div class="results" id="results-container">
+                <h3>验证结果</h3>
+                <div id="results-list">
+                    <p style="text-align: center; color: #718096; font-size: 1.1em;">点击"验证幻和"查看结果</p>
+                </div>
+                <div id="result-summary" class="result-summary">
+                    <!-- 验证总结将在这里显示 -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- 互动练习标签页 -->
+        <div class="tab-content" id="content-exercise">
+            <div class="exercise-section">
+                <!-- 顶部控制按钮 -->
+                <div class="top-controls">
+                    <button class="exercise-btn" id="new-exercise-btn">生成新题目</button>
+                    <button class="primary-btn" id="check-exercise-btn">检查答案</button>
+                    <button class="info-btn" id="show-answer-btn">显示答案</button>
+                    <button class="secondary-btn" id="clear-exercise-btn">清空练习</button>
+                </div>
+                
+                <!-- 统计信息 -->
+                <div class="stats-box">
+                    <div class="stat-item">
+                        <div class="stat-value" id="number-count">9</div>
+                        <div class="stat-label">数字个数</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="number-range">-15~15</div>
+                        <div class="stat-label">数字范围</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="magic-sum-display">?</div>
+                        <div class="stat-label">幻和</div>
+                    </div>
+                </div>
+                
+                <!-- 已打乱的数字 -->
+                <h4 class="section-title">已打乱的数字：</h4>
+                <div class="number-pool" id="number-pool">
+                    <!-- 数字池将通过JavaScript生成 -->
+                </div>
+                
+                <!-- 从小到大排列的数字 -->
+                <h4 class="section-title">从小到大排列的数字：</h4>
+                <div class="sorted-numbers">
+                    <div class="number-sequence" id="sorted-sequence">
+                        <!-- 排序后的数字将在这里显示 -->
+                    </div>
+                </div>
+                
+                <!-- 幻方填写区 -->
+                <h4 class="section-title">幻方填写区：</h4>
+                <div class="magic-square-grid" id="exercise-grid">
+                    <!-- 练习格子将通过JavaScript生成 -->
+                </div>
+                
+                <!-- 练习结果 -->
+                <div class="results" id="exercise-results">
+                    <h3>练习结果</h3>
+                    <div id="exercise-results-list">
+                        <p style="text-align: center; color: #718096; font-size: 1.1em;">填写数字后点击"检查答案"查看结果</p>
+                    </div>
+                    <div id="exercise-summary" class="result-summary">
+                        <!-- 练习总结将在这里显示 -->
+                    </div>
+                </div>
+                
+                <!-- 正确答案提示 -->
+                <div class="hint" id="answer-hint" style="display: none;">
+                    <h4>正确答案</h4>
+                    <div class="magic-square-grid" id="correct-answer-grid">
+                        <!-- 正确答案将通过JavaScript显示 -->
+                    </div>
+                    <p style="text-align: center; font-weight: bold; margin: 18px 0; font-size: 1.2em;" id="magic-sum-text"></p>
+                </div>
+                
+                <!-- 底部控制按钮 -->
+                <div class="bottom-controls">
+                    <button class="exercise-btn" id="new-exercise-btn-bottom">生成新题目</button>
+                    <button class="primary-btn" id="check-exercise-btn-bottom">检查答案</button>
+                    <button class="info-btn" id="show-answer-btn-bottom">显示答案</button>
+                    <button class="secondary-btn" id="clear-exercise-btn-bottom">清空练习</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footnote">
+            <p>七年级数学 - 幻方验证与练习工具 | 优化版 | 专为课堂设计</p>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let currentNumbers = [];
+        let sortedNumbers = [];
+        let correctAnswer = [];
+        let magicSum = 0;
+        let exerciseCells = [];
+        let currentExerciseId = 0;
+        let attempts = 0;
+        
+        // 初始化标签页切换
+        document.getElementById('tab-verify').addEventListener('click', () => switchTab('verify'));
+        document.getElementById('tab-exercise').addEventListener('click', () => switchTab('exercise'));
+        
+        function switchTab(tabName) {
+            // 更新标签
+            document.getElementById('tab-verify').classList.remove('active');
+            document.getElementById('tab-exercise').classList.remove('active');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            
+            // 更新内容
+            document.getElementById('content-verify').classList.remove('active');
+            document.getElementById('content-exercise').classList.remove('active');
+            document.getElementById(`content-${tabName}`).classList.add('active');
+            
+            // 如果是练习标签，确保有题目
+            if (tabName === 'exercise' && currentNumbers.length === 0) {
+                generateNewExercise();
+            }
+        }
+        
+        // ==================== 验证幻方部分 ====================
+        
+        // 初始化幻方网格
+        const magicSquare = document.getElementById('magic-square');
+        const resultsList = document.getElementById('results-list');
+        const resultSummary = document.getElementById('result-summary');
+        
+        // 创建3x3幻方输入网格
+        for (let i = 0; i < 9; i++) {
+            const cell = document.createElement('input');
+            cell.type = 'text';
+            cell.className = 'cell';
+            cell.id = `cell-${i}`;
+            cell.placeholder = `${i+1}`;
+            cell.setAttribute('maxlength', '10');
+            magicSquare.appendChild(cell);
+        }
+        
+        // 获取所有格子元素
+        const cells = document.querySelectorAll('.cell');
+        
+        // 验证按钮事件
+        document.getElementById('verify-btn').addEventListener('click', verifyMagicSquare);
+        
+        // 重置按钮事件
+        document.getElementById('reset-btn').addEventListener('click', resetGrid);
+        
+        // 示例按钮事件
+        document.getElementById('example-btn').addEventListener('click', loadExample);
+        
+        // 代数式解析函数
+        function parseAlgebraicExpression(expr, aValue, bValue) {
+            if (!expr || expr.trim() === '') return NaN;
+            
+            expr = expr.trim().toLowerCase();
+            
+            // 如果是纯数字，直接返回
+            if (!isNaN(expr) && expr !== '') {
+                return parseFloat(expr);
+            }
+            
+            // 检查是否包含字母
+            if (!expr.includes('a') && !expr.includes('b')) {
+                return NaN; // 不是有效的代数式或数字
+            }
+            
+            // 替换a和b的值
+            let processedExpr = expr
+                .replace(/a/g, `(${aValue})`)
+                .replace(/b/g, `(${bValue})`);
+            
+            try {
+                // 使用eval计算表达式，注意安全性（这里输入是受控的）
+                return eval(processedExpr);
+            } catch (error) {
+                console.error(`无法解析表达式: ${expr}`);
+                return NaN;
+            }
+        }
+        
+        // 验证幻方
+        function verifyMagicSquare() {
+            // 获取a和b的值（如果使用代数式）
+            let aValue = 5; // 默认值
+            let bValue = 3; // 默认值
+            
+            // 清除之前的错误标记
+            cells.forEach(cell => {
+                cell.classList.remove('error');
+                cell.classList.remove('correct');
+            });
+            
+            // 收集所有格子的值
+            const values = [];
+            let hasAlgebraicExpression = false;
+            
+            for (let i = 0; i < cells.length; i++) {
+                const cellValue = cells[i].value.trim();
+                values.push(cellValue);
+                
+                // 检查是否有代数式
+                if (cellValue.includes('a') || cellValue.includes('b')) {
+                    hasAlgebraicExpression = true;
+                }
+            }
+            
+            // 如果有代数式，提示用户输入a和b的值
+            if (hasAlgebraicExpression) {
+                const aInput = prompt("检测到代数式，请输入a的值（默认为5）:", "5");
+                const bInput = prompt("检测到代数式，请输入b的值（默认为3）:", "3");
+                
+                aValue = aInput && !isNaN(aInput) ? parseFloat(aInput) : 5;
+                bValue = bInput && !isNaN(bInput) ? parseFloat(bInput) : 3;
+            }
+            
+            // 计算每个格子的数值
+            const numericValues = [];
+            let hasInvalidInput = false;
+            
+            for (let i = 0; i < values.length; i++) {
+                const expr = values[i];
+                const numValue = parseAlgebraicExpression(expr, aValue, bValue);
+                
+                if (isNaN(numValue)) {
+                    cells[i].classList.add('error');
+                    hasInvalidInput = true;
+                } else {
+                    cells[i].classList.remove('error');
+                }
+                
+                numericValues.push(numValue);
+            }
+            
+            // 如果有无效输入，提示用户
+            if (hasInvalidInput) {
+                resultsList.innerHTML = `
+                    <div class="result-item incorrect">
+                        <span>错误</span>
+                        <span>部分输入无法解析，请检查输入格式</span>
+                    </div>
+                `;
+                resultSummary.innerHTML = `<div class="summary-failure">请检查红色标记的格子，确保输入的是数字或简单代数式(如: a+1, 2a-b)</div>`;
+                return;
+            }
+            
+            // 计算所有行、列、对角线的和
+            const sums = [];
+            const descriptions = [];
+            
+            // 行和
+            for (let row = 0; row < 3; row++) {
+                let sum = 0;
+                for (let col = 0; col < 3; col++) {
+                    sum += numericValues[row * 3 + col];
+                }
+                sums.push(sum);
+                descriptions.push(`第 ${row + 1} 行`);
+            }
+            
+            // 列和
+            for (let col = 0; col < 3; col++) {
+                let sum = 0;
+                for (let row = 0; row < 3; row++) {
+                    sum += numericValues[row * 3 + col];
+                }
+                sums.push(sum);
+                descriptions.push(`第 ${col + 1} 列`);
+            }
+            
+            // 主对角线
+            let diagonal1 = numericValues[0] + numericValues[4] + numericValues[8];
+            sums.push(diagonal1);
+            descriptions.push("主对角线 (左上到右下)");
+            
+            // 副对角线
+            let diagonal2 = numericValues[2] + numericValues[4] + numericValues[6];
+            sums.push(diagonal2);
+            descriptions.push("副对角线 (右上到左下)");
+            
+            // 计算幻和（所有和的平均值）
+            const magicSum = sums.reduce((a, b) => a + b, 0) / sums.length;
+            
+            // 显示结果
+            resultsList.innerHTML = '';
+            let allEqual = true;
+            
+            for (let i = 0; i < sums.length; i++) {
+                const isEqual = Math.abs(sums[i] - magicSum) < 0.0001; // 处理浮点数精度问题
+                allEqual = allEqual && isEqual;
+                
+                const resultItem = document.createElement('div');
+                resultItem.className = `result-item ${isEqual ? 'correct' : 'incorrect'}`;
+                
+                if (isEqual) {
+                    resultItem.innerHTML = `
+                        <span>${descriptions[i]}</span>
+                        <span>和为 ${sums[i].toFixed(2)} ✓</span>
+                    `;
+                } else {
+                    resultItem.innerHTML = `
+                        <span>${descriptions[i]}</span>
+                        <span>和为 ${sums[i].toFixed(2)}，与幻和 ${magicSum.toFixed(2)} 不符</span>
+                    `;
+                }
+                
+                resultsList.appendChild(resultItem);
+            }
+            
+            // 显示总结
+            if (allEqual) {
+                resultSummary.innerHTML = `<div class="summary-success">恭喜！这是一个完美的幻方，幻和为 ${magicSum.toFixed(2)}</div>`;
+            } else {
+                resultSummary.innerHTML = `<div class="summary-failure">这不是一个幻方，各行、列、对角线的和不完全相等</div>`;
+            }
+            
+            // 如果有代数式，显示使用的a和b的值
+            if (hasAlgebraicExpression) {
+                const algebraInfo = document.createElement('div');
+                algebraInfo.className = 'result-item';
+                algebraInfo.innerHTML = `<span>代数式计算值</span><span>a=${aValue}, b=${bValue}</span>`;
+                resultsList.appendChild(algebraInfo);
+            }
+        }
+        
+        // 重置网格
+        function resetGrid() {
+            cells.forEach(cell => {
+                cell.value = '';
+                cell.classList.remove('error');
+                cell.classList.remove('correct');
+            });
+            
+            resultsList.innerHTML = '<p style="text-align: center; color: #718096; font-size: 1.1em;">点击"验证幻和"查看结果</p>';
+            resultSummary.innerHTML = '';
+        }
+        
+        // 加载示例幻方
+        function loadExample() {
+            // 经典3x3幻方示例
+            const exampleValues = [
+                '2', '7', '6',
+                '9', '5', '1',
+                '4', '3', '8'
+            ];
+            
+            // 代数式幻方示例
+            const algebraicExample = [
+                'a+b', 'a-b', 'a+1',
+                'a-1', 'a', 'a+2',
+                'a-2', 'a+3', 'a-b'
+            ];
+            
+            // 随机选择示例
+            const useAlgebraic = Math.random() > 0.5;
+            
+            for (let i = 0; i < cells.length; i++) {
+                cells[i].value = useAlgebraic ? algebraicExample[i] : exampleValues[i];
+                cells[i].classList.remove('error');
+            }
+            
+            resultsList.innerHTML = '<p style="text-align: center; color: #718096; font-size: 1.1em;">已加载示例，点击"验证幻和"查看结果</p>';
+            resultSummary.innerHTML = '';
+            
+            if (useAlgebraic) {
+                resultSummary.innerHTML = `<div class="summary-success">已加载代数式幻方示例，其中a=5, b=3时构成幻方</div>`;
+            }
+        }
+        
+        // ==================== 互动练习部分 ====================
+        
+        // 初始化练习网格
+        const exerciseGrid = document.getElementById('exercise-grid');
+        const numberPool = document.getElementById('number-pool');
+        const exerciseResultsList = document.getElementById('exercise-results-list');
+        const exerciseSummary = document.getElementById('exercise-summary');
+        const answerHint = document.getElementById('answer-hint');
+        const correctAnswerGrid = document.getElementById('correct-answer-grid');
+        const magicSumText = document.getElementById('magic-sum-text');
+        const numberCount = document.getElementById('number-count');
+        const numberRange = document.getElementById('number-range');
+        const magicSumDisplay = document.getElementById('magic-sum-display');
+        const sortedSequence = document.getElementById('sorted-sequence');
+        
+        // 创建练习网格
+        for (let i = 0; i < 9; i++) {
+            const cell = document.createElement('input');
+            cell.type = 'text';
+            cell.className = 'cell';
+            cell.id = `exercise-cell-${i}`;
+            cell.setAttribute('maxlength', '4');
+            cell.setAttribute('readonly', 'true');
+            
+            exerciseGrid.appendChild(cell);
+            exerciseCells.push(cell);
+        }
+        
+        // 绑定顶部按钮事件
+        document.getElementById('new-exercise-btn').addEventListener('click', generateNewExercise);
+        document.getElementById('check-exercise-btn').addEventListener('click', checkExerciseAnswer);
+        document.getElementById('show-answer-btn').addEventListener('click', showCorrectAnswer);
+        document.getElementById('clear-exercise-btn').addEventListener('click', clearExercise);
+        
+        // 绑定底部按钮事件
+        document.getElementById('new-exercise-btn-bottom').addEventListener('click', generateNewExercise);
+        document.getElementById('check-exercise-btn-bottom').addEventListener('click', checkExerciseAnswer);
+        document.getElementById('show-answer-btn-bottom').addEventListener('click', showCorrectAnswer);
+        document.getElementById('clear-exercise-btn-bottom').addEventListener('click', clearExercise);
+        
+        // 生成能构成幻方的9个不重复数字（范围：-15到15，从小到大排列）
+        function generateMagicSquareNumbers() {
+            // 方法：生成一个等差数列，确保能构成幻方
+            
+            // 1. 确定等差数列的参数
+            // 为了确保数字在-15到15之间，我们选择适当的起始值和步长
+            const possibleSteps = [1, 2, 3]; // 可能的步长，控制难度
+            const step = possibleSteps[Math.floor(Math.random() * possibleSteps.length)];
+            
+            // 2. 计算起始值范围
+            // 等差数列公式：a, a+d, a+2d, ..., a+8d
+            // 需要满足：a >= -15 且 a+8d <= 15
+            const minStart = -15;
+            const maxStart = 15 - 8 * step;
+            
+            // 如果maxStart < minStart，说明步长太大，需要减小步长
+            let effectiveStep = step;
+            let effectiveMaxStart = maxStart;
+            while (effectiveMaxStart < minStart && effectiveStep > 1) {
+                effectiveStep--;
+                effectiveMaxStart = 15 - 8 * effectiveStep;
+            }
+            
+            // 3. 随机选择起始值
+            const start = Math.floor(Math.random() * (effectiveMaxStart - minStart + 1)) + minStart;
+            
+            // 4. 生成等差数列
+            const numbers = [];
+            for (let i = 0; i < 9; i++) {
+                numbers.push(start + i * effectiveStep);
+            }
+            
+            // 5. 验证所有数字都在-15到15范围内
+            const allInRange = numbers.every(num => num >= -15 && num <= 15);
+            if (!allInRange) {
+                // 如果不在范围内，调整数字
+                for (let i = 0; i < numbers.length; i++) {
+                    if (numbers[i] < -15) numbers[i] = -15;
+                    if (numbers[i] > 15) numbers[i] = 15;
+                }
+            }
+            
+            // 6. 确保不重复（等差数列已经保证不重复，但以防万一）
+            const uniqueNumbers = [...new Set(numbers)];
+            if (uniqueNumbers.length < 9) {
+                // 补充缺失的数字
+                for (let i = uniqueNumbers.length; i < 9; i++) {
+                    let newNum;
+                    do {
+                        newNum = Math.floor(Math.random() * 31) - 15;
+                    } while (uniqueNumbers.includes(newNum));
+                    uniqueNumbers.push(newNum);
+                }
+                uniqueNumbers.sort((a, b) => a - b);
+                return uniqueNumbers;
+            }
+            
+            // 7. 排序（从小到大）
+            numbers.sort((a, b) => a - b);
+            
+            return numbers;
+        }
+        
+        // 生成新练习题目
+        function generateNewExercise() {
+            currentExerciseId++;
+            attempts = 0;
+            
+            // 清空之前的答案
+            clearExercise();
+            answerHint.style.display = 'none';
+            
+            // 生成能构成幻方的9个不重复数字（从小到大排列）
+            sortedNumbers = generateMagicSquareNumbers();
+            
+            // 创建数字副本并打乱，用于数字池
+            currentNumbers = [...sortedNumbers];
+            for (let i = currentNumbers.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [currentNumbers[i], currentNumbers[j]] = [currentNumbers[j], currentNumbers[i]];
+            }
+            
+            // 生成正确的幻方排列
+            // 使用经典的3阶幻方模板（Lo Shu幻方）
+            const magicTemplate = [8, 1, 6, 3, 5, 7, 4, 9, 2]; // 位置映射
+            
+            correctAnswer = [];
+            for (let i = 0; i < 9; i++) {
+                // 模板中的数字是1-9，映射到排序后的数字（索引0-8）
+                correctAnswer.push(sortedNumbers[magicTemplate[i] - 1]);
+            }
+            
+            // 计算幻和
+            magicSum = correctAnswer[0] + correctAnswer[1] + correctAnswer[2];
+            
+            // 更新统计信息
+            numberCount.textContent = '9';
+            numberRange.textContent = '-15~15';
+            magicSumDisplay.textContent = '?';
+            
+            // 显示排序后的数字
+            displaySortedNumbers();
+            
+            // 显示数字池并设置拖拽和点击功能
+            displayNumberPool();
+            
+            // 设置幻方格子的拖拽功能
+            setupDragAndDrop();
+            
+            // 更新练习结果显示
+            exerciseResultsList.innerHTML = '<p style="text-align: center; color: #718096; font-size: 1.1em;">填写数字后点击"检查答案"查看结果</p>';
+            exerciseSummary.innerHTML = '';
+            
+            // 提示用户开始练习
+            exerciseSummary.innerHTML = `<div class="summary-success">第${currentExerciseId}题已生成！请将9个不重复数字填入幻方格中。</div>`;
+        }
+        
+        // 显示排序后的数字
+        function displaySortedNumbers() {
+            sortedSequence.innerHTML = '';
+            
+            sortedNumbers.forEach((num, index) => {
+                const seqNumber = document.createElement('div');
+                seqNumber.className = `seq-number ${index === 4 ? 'center' : ''}`;
+                seqNumber.textContent = num;
+                
+                sortedSequence.appendChild(seqNumber);
+            });
+        }
+        
+        // 显示数字池并设置交互功能
+        function displayNumberPool() {
+            numberPool.innerHTML = '';
+            
+            currentNumbers.forEach((num, index) => {
+                const numberItem = document.createElement('div');
+                numberItem.className = 'number-item';
+                numberItem.id = `number-${index}`;
+                numberItem.textContent = num;
+                numberItem.draggable = true;
+                
+                // 添加拖拽事件
+                numberItem.addEventListener('dragstart', function(e) {
+                    e.dataTransfer.setData('text/plain', num.toString());
+                    e.dataTransfer.setData('index', index.toString());
+                });
+                
+                // 添加点击事件
+                numberItem.addEventListener('click', function() {
+                    if (!this.classList.contains('used')) {
+                        selectNumberFromPool(num, index, this);
+                    }
+                });
+                
+                numberPool.appendChild(numberItem);
+            });
+        }
+        
+        // 设置拖拽功能
+        function setupDragAndDrop() {
+            // 为练习格子添加拖放事件
+            exerciseCells.forEach(cell => {
+                // 清除之前的监听器
+                const newCell = cell.cloneNode(true);
+                cell.parentNode.replaceChild(newCell, cell);
+                
+                // 重新获取引用
+                const updatedCell = newCell;
+                updatedCell.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    if (this.value === '') {
+                        this.classList.add('drag-over');
+                    }
+                });
+                
+                updatedCell.addEventListener('dragleave', function(e) {
+                    this.classList.remove('drag-over');
+                });
+                
+                updatedCell.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('drag-over');
+                    
+                    const num = e.dataTransfer.getData('text/plain');
+                    const index = e.dataTransfer.getData('index');
+                    
+                    if (num && this.value === '') {
+                        this.value = num;
+                        this.classList.add('correct');
+                        
+                        // 标记数字为已使用
+                        const numberItem = document.getElementById(`number-${index}`);
+                        if (numberItem && !numberItem.classList.contains('used')) {
+                            numberItem.classList.add('used');
+                            numberItem.draggable = false;
+                        }
+                    }
+                });
+                
+                // 添加点击事件以移除数字
+                updatedCell.addEventListener('click', function() {
+                    if (this.value !== '') {
+                        // 如果格子已有数字，则将其放回数字池
+                        const num = parseInt(this.value);
+                        const index = currentNumbers.indexOf(num);
+                        
+                        if (index !== -1) {
+                            const numberItem = document.getElementById(`number-${index}`);
+                            if (numberItem) {
+                                numberItem.classList.remove('used');
+                                numberItem.draggable = true;
+                            }
+                        }
+                        
+                        this.value = '';
+                        this.classList.remove('correct');
+                        this.classList.remove('error');
+                    }
+                });
+            });
+            
+            // 更新exerciseCells数组
+            exerciseCells = Array.from(document.querySelectorAll('#exercise-grid .cell'));
+        }
+        
+        // 从数字池选择数字
+        function selectNumberFromPool(num, index, element) {
+            // 查找第一个空的格子
+            const emptyCell = Array.from(exerciseCells).find(cell => cell.value === '');
+            
+            if (emptyCell && !element.classList.contains('used')) {
+                emptyCell.value = num;
+                emptyCell.classList.add('correct');
+                
+                // 标记数字为已使用
+                element.classList.add('used');
+                element.draggable = false;
+            }
+        }
+        
+        // 检查练习答案
+        function checkExerciseAnswer() {
+            attempts++;
+            
+            // 检查是否所有格子都已填写
+            const allFilled = exerciseCells.every(cell => cell.value !== '');
+            
+            if (!allFilled) {
+                exerciseResultsList.innerHTML = '<div class="result-item incorrect"><span>错误</span><span>请填写所有格子</span></div>';
+                exerciseSummary.innerHTML = '<div class="summary-failure">请将9个数字全部填入幻方格中</div>';
+                return;
+            }
+            
+            // 收集用户答案
+            const userAnswer = [];
+            const usedNumbers = [];
+            
+            for (let i = 0; i < exerciseCells.length; i++) {
+                const value = parseInt(exerciseCells[i].value);
+                if (isNaN(value)) {
+                    exerciseCells[i].classList.add('error');
+                    exerciseResultsList.innerHTML = '<div class="result-item incorrect"><span>错误</span><span>请输入有效的数字</span></div>';
+                    exerciseSummary.innerHTML = '<div class="summary-failure">请确保所有格子都填写了有效的数字</div>';
+                    return;
+                } else {
+                    userAnswer.push(value);
+                    usedNumbers.push(value);
+                    exerciseCells[i].classList.remove('error');
+                }
+            }
+            
+            // 检查是否使用了所有数字且不重复
+            const sortedUserNumbers = [...usedNumbers].sort((a, b) => a - b);
+            
+            let numbersMatch = true;
+            if (sortedUserNumbers.length === 9) {
+                for (let i = 0; i < 9; i++) {
+                    if (sortedUserNumbers[i] !== sortedNumbers[i]) {
+                        numbersMatch = false;
+                        break;
+                    }
+                }
+            } else {
+                numbersMatch = false;
+            }
+            
+            if (!numbersMatch) {
+                exerciseResultsList.innerHTML = '<div class="result-item incorrect"><span>错误</span><span>请使用给定的9个数字，不要重复或遗漏</span></div>';
+                exerciseSummary.innerHTML = '<div class="summary-failure">请使用上方给出的9个数字，每个数字使用一次</div>';
+                return;
+            }
+            
+            // 检查是否为幻方
+            const sums = [];
+            const descriptions = [];
+            
+            // 行和
+            for (let row = 0; row < 3; row++) {
+                let sum = 0;
+                for (let col = 0; col < 3; col++) {
+                    sum += userAnswer[row * 3 + col];
+                }
+                sums.push(sum);
+                descriptions.push(`第 ${row + 1} 行`);
+            }
+            
+            // 列和
+            for (let col = 0; col < 3; col++) {
+                let sum = 0;
+                for (let row = 0; row < 3; row++) {
+                    sum += userAnswer[row * 3 + col];
+                }
+                sums.push(sum);
+                descriptions.push(`第 ${col + 1} 列`);
+            }
+            
+            // 主对角线
+            let diagonal1 = userAnswer[0] + userAnswer[4] + userAnswer[8];
+            sums.push(diagonal1);
+            descriptions.push("主对角线");
+            
+            // 副对角线
+            let diagonal2 = userAnswer[2] + userAnswer[4] + userAnswer[6];
+            sums.push(diagonal2);
+            descriptions.push("副对角线");
+            
+            // 检查所有和是否相等
+            const firstSum = sums[0];
+            let allEqual = true;
+            
+            for (let i = 1; i < sums.length; i++) {
+                if (sums[i] !== firstSum) {
+                    allEqual = false;
+                    break;
+                }
+            }
+            
+            // 显示结果
+            exerciseResultsList.innerHTML = '';
+            
+            if (allEqual) {
+                // 正确答案
+                exerciseResultsList.innerHTML = `
+                    <div class="result-item correct">
+                        <span>恭喜！第${attempts}次尝试成功！</span>
+                        <span>你成功构建了一个幻方！</span>
+                    </div>
+                `;
+                exerciseSummary.innerHTML = `<div class="summary-success">完美！幻和为 ${firstSum}</div>`;
+                magicSumDisplay.textContent = firstSum;
+                
+                // 标记所有格子为正确
+                exerciseCells.forEach(cell => {
+                    cell.classList.remove('error');
+                    cell.classList.add('correct');
+                });
+            } else {
+                // 部分正确/错误
+                exerciseResultsList.innerHTML = `<div class="result-item incorrect"><span>还需努力</span><span>第${attempts}次尝试</span></div>`;
+                exerciseSummary.innerHTML = `<div class="summary-failure">各行、列、对角线的和不完全相等。幻和应为 ${magicSum}</div>`;
+                
+                // 显示每个行列的和
+                for (let i = 0; i < sums.length; i++) {
+                    const resultItem = document.createElement('div');
+                    resultItem.className = `result-item ${sums[i] === magicSum ? 'correct' : 'incorrect'}`;
+                    
+                    if (sums[i] === magicSum) {
+                        resultItem.innerHTML = `
+                            <span>${descriptions[i]}</span>
+                            <span>和为 ${sums[i]} ✓</span>
+                        `;
+                    } else {
+                        resultItem.innerHTML = `
+                            <span>${descriptions[i]}</span>
+                            <span>和为 ${sums[i]}，与幻和 ${magicSum} 不符</span>
+                        `;
+                    }
+                    
+                    exerciseResultsList.appendChild(resultItem);
+                }
+            }
+        }
+        
+        // 显示正确答案
+        function showCorrectAnswer() {
+            if (correctAnswer.length === 0) {
+                alert('请先生成一个练习题目！');
+                return;
+            }
+            
+            // 显示答案区域
+            answerHint.style.display = 'block';
+            
+            // 显示正确答案
+            correctAnswerGrid.innerHTML = '';
+            
+            for (let i = 0; i < 9; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.textContent = correctAnswer[i];
+                cell.style.textAlign = 'center';
+                cell.style.fontSize = '2em';
+                cell.style.fontWeight = '700';
+                cell.style.padding = '18px';
+                
+                correctAnswerGrid.appendChild(cell);
+            }
+            
+            // 显示幻和
+            magicSumText.textContent = `幻和为: ${magicSum}`;
+            magicSumDisplay.textContent = magicSum;
+            
+            // 更新练习结果
+            exerciseSummary.innerHTML = `<div class="summary-success">正确答案已显示。幻和为 ${magicSum}。</div>`;
+        }
+        
+        // 清空练习
+        function clearExercise() {
+            exerciseCells.forEach(cell => {
+                cell.value = '';
+                cell.classList.remove('correct');
+                cell.classList.remove('error');
+                cell.classList.remove('drag-over');
+            });
+            
+            // 重置数字池状态
+            const numberItems = document.querySelectorAll('.number-item');
+            numberItems.forEach(item => {
+                item.classList.remove('used');
+                item.draggable = true;
+            });
+            
+            exerciseResultsList.innerHTML = '<p style="text-align: center; color: #718096; font-size: 1.1em;">填写数字后点击"检查答案"查看结果</p>';
+            exerciseSummary.innerHTML = '';
+            answerHint.style.display = 'none';
+        }
+        
+        // 页面加载时初始化
+        window.addEventListener('DOMContentLoaded', () => {
+            // 加载一个示例到验证标签页
+            setTimeout(loadExample, 500);
+            
+            // 生成一个练习题目
+            setTimeout(generateNewExercise, 1000);
+        });
+    </script>
+</body>
+</html>
